@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/pastorhudson/pcobot.svg?branch=master)](https://travis-ci.org/pastorhudson/pcobot)
+
 # PCO Bot:
 PCO Bot is a bot that integrates with the Planning Center Online API.
 
@@ -43,6 +44,15 @@ If no app name is provided it will list all the apps you can access.
 * ```Show the set list for *[Any future service date]*```
 * ```Show the set list for *[Any future service date]*```
 * ```What is the arrangement for [Any Song]?```
+* ```Who is *[serving|scheduled]* *[on|for]* the *[Any Services team]* team *[Any future day/date/time]*?```
+    * Examples:
+    * "Who is serving on the band team on Sunday at 10a?"
+    * "Who is scheduled for the Downtown Band team today?"
+* ```[!serving|!scheduled] *[Any Services team]* *[Any future day/date/time]*```
+    * Note: for teams with more than one word in the name, wrap the team name in quotes. E.g. `!serving 'Downtown Band' Sunday`
+
+
+If you specify a time, it will try to find the team for that precise service time—if you do not, it will simply try to match the team for the day provided.
 
 #### Access Control Lists
 This isn't really used in the pcobot but it is used for Will bot commands
@@ -90,11 +100,30 @@ To change the access control list, see configuration instructions below and this
 ## Installation
 ----------------------------------
 
-
 ### Install on Heroku
 Click the button!
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+If everything goes well, you will have your own instance of pcobot running.
+
+Update existing One-Click Heroku Deployment
+Prepare for updates:
+
+#### create local repo pointing to the Heroku remote
+`heroku git:clone --app YOUR_HEROKU_APPNAME && cd YOUR_HEROKU_APPNAME`
+It may tell you that you've cloned an empty repository. That is fine. 
+
+#### attach the GitHub repository of pcobot as a new remote
+`git remote add origin https://github.com/pastorhudson/pcobot`
+
+From now on you can simply update your Heroku instance by running:
+```
+cd YOUR_HEROKU_APPNAME
+git pull origin master # pull down the latest version from GitHub
+
+git push heroku master # push all updates back to your Heroku app instance
+```
 
 ### Install on Linux 
 *(example code assumes Debian - including Ubuntu, Mint, KNOPPIX, Raspbian)*
@@ -125,12 +154,12 @@ Invite your bot to the #announcements and #general channels, and any other chann
 
 #### #announcements 
 This channel is where scheduled announcements will be posted. You can change this using the !achannel command. 
-* ```!achannel``` Responds with the current announcement channel
-* ```!achannel [any channel]``` Sets the announcement channel for all announcements.
+* :lock:```!achannel``` Responds with the current announcement channel
+* :lock:```!achannel [any channel]``` Sets the announcement channel for all announcements.
 You'll need to invite the bot to any channel you want it to post.
 
-* ```!toggle``` Responds with a list of the current announcement toggles.
-* ```!toggle <announcement name>``` Turns announcements on and off.
+* :lock:```!toggle``` Responds with a list of the current announcement toggles.
+* :lock:```!toggle <announcement name>``` Turns announcements on and off.
 
 #### WebHooks
 Some announcements like "New Person Created" need to have Planning Center webhooks configured.
@@ -178,3 +207,43 @@ Will has docs, including a quickstart and lots of screenshots at:
 
 
 [Pypco](https://github.com/billdeitrick/pypco) is an object-oriented, Pythonic library built by Bill Deitrick.
+
+# PCO-BOT - Development instructions
+### Setup your Dev environment:
+
+#### Using Docker Exclusively
+* If you're mainly working on Planning Center functionality this is a great option.
+  If you want to work on will backend stuff you should probably use the other dev option.
+* If you don't have docker installed [install it here](https://store.docker.com/search?offering=community&type=edition)
+* If you're on linux `sudo apt-get install docker-ce docker-compose` should work.
+* Fork this repository.
+* Clone your repository to your local computer
+* Edit the default.env file in the `pcobot/docker-dev` folder.
+* From command line run `docker-compose up` to start pcobot!
+* It will run all the code from your local repository
+
+
+#### Docker / Local Hybrid
+
+* This is best on mac and linux. I haven't tried this on windows.
+* Fork and clone the repository and switch to the dev branch.
+* Create a virtual environment in the pcobot directory
+    * `python -m venv .`
+    * activate `source bin/activate`
+* Install requirements `pip install -r requirements.txt`
+    * You may need to upgrade pip and setup tools if markdownify doesn't install.
+    * You may need to `apt install build-essential python-dev libxml2-dev libxslt1-dev zlib1g-dev`
+    * Work through any other errors until requirements.txt installs successfully
+* Use Docker compose for redis
+    * In the `docker-dev` folder there is a `redis-only` folder.
+    * Assuming you have docker and docker-compose installed run `docker-compose up` and that 
+    will run redis in a container ready to accept connections on localhost:6379
+* Edit `start.sh` in the pcobot folder.
+    * Add your API keys, and Slack Legacy bot token.
+    * Set start.sh to executable `chmod +x ./start.sh`
+* Run `./start.sh` it should run. If not then work through the errors.
+
+#### Final Instructions
+* [Join us on Slack!](https://join.slack.com/t/pcobot/shared_invite/enQtNDY4MDUxNTI2Mjc5LTk4MzAxYTAyNzRkYzhkMDM2NGQ5YzU2OTdkNWU1MTMwMjc1OTFhNzY0Y2MxMDQ0NzljZmUzZGU5YmI3MzE3M2M)
+* Please make all pull requests on the Dev Branch.
+* All pull requests are required to pass PEP8 and Travis CI
